@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Szkolny Quiz Wiedzy - Losowe Pytania</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --btn-bg: #334155;
+      --btn-hover: #475569;
+      --btn-selected: #4338ca;
+      --btn-selected-border: #818cf8;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --badge-bg: #312e81;
+      --badge-text: #c7d2fe;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .quiz-container {
+      width: 100%;
+      max-width: 680px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .counter {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #0f172a;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 20%;
+      transition: width 0.3s ease;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+
+    .question-text {
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 24px;
+    }
+
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      background: var(--btn-bg);
+      border: 1.5px solid transparent;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .option-item:hover {
+      background: var(--btn-hover);
+    }
+
+    .option-item.selected {
+      background: var(--btn-selected);
+      border-color: var(--btn-selected-border);
+    }
+
+    .letter-badge {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: #475569;
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .option-item.selected .letter-badge {
+      background: var(--accent);
+    }
+
+    .option-text {
+      font-size: 1.05rem;
+      font-weight: 500;
+    }
+
+    .error-msg {
+      color: var(--danger);
+      font-size: 0.95rem;
+      min-height: 22px;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .footer-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-next {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-next:hover {
+      background: var(--accent-hover);
+    }
+
+    .result-container {
+      display: none;
+      text-align: center;
+    }
+
+    .result-tag {
+      display: inline-block;
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .score-big {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .score-percentage {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+    }
+
+    .feedback-msg {
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-bottom: 24px;
+    }
+
+    .breakdown-title {
+      text-align: left;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .breakdown-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-align: left;
+      margin-bottom: 28px;
+    }
+
+    .breakdown-item {
+      background: #0f172a;
+      padding: 12px 16px;
+      border-radius: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .breakdown-icon {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .breakdown-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .breakdown-q {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .breakdown-a {
+      font-size: 0.85rem;
+    }
+
+    .btn-restart {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-restart:hover {
+      background: var(--accent-hover);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="quiz-container">
+    <div id="question-screen">
+      <div class="quiz-header">
+        <div class="title">🎓 SZKOLNY QUIZ WIEDZY</div>
+        <div class="counter" id="counter-txt">Pytanie 1 z 5</div>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progress-bar"></div>
+      </div>
+
+      <div class="badge" id="category-badge">🌍 Geografia</div>
+      <div class="question-text" id="question-text">Pytanie...</div>
+
+      <div class="options-list" id="options-list"></div>
+
+      <div class="error-msg" id="error-msg">⚠️ Proszę wybrać odpowiedź przed przejściem dalej!</div>
+
+      <div class="footer-actions">
+        <button class="btn-next" id="next-btn" onclick="submitAnswer()">Następne pytanie ➔</button>
+      </div>
+    </div>
+
+    <div id="result-screen" class="result-container">
+      <div class="result-tag" id="result-tag">🏆 PERFEKCYJNIE!</div>
+      <div class="score-big" id="score-big">5 / 5</div>
+      <div class="score-percentage" id="score-percentage">Poprawne odpowiedzi: 100%</div>
+      <div class="feedback-msg" id="feedback-msg">Gratulacje! Odpowiedziałeś poprawnie na wszystkie pytania!</div>
+
+      <div class="breakdown-title">Podsumowanie wylosowanych pytań i Twoich odpowiedzi:</div>
+      <div class="breakdown-list" id="breakdown-list"></div>
+
+      <button class="btn-restart" onclick="restartQuiz()">🔄 Nowy quiz (losuj inne pytania)</button>
+    </div>
+  </div>
+
+  <script>
+    const QUESTION_POOL = [
+      { category: "🌍 Geografia", question: "Jaka jest oficjalna stolica Australii?", options: ["Sydney", "Melbourne", "Canberra", "Brisbane"], correct: 2 },
+      { category: "🌍 Geografia", question: "Jaka jest najdłuższa rzeka w Polsce?", options: ["Odra", "Wisła", "Warta", "Bug"], correct: 1 },
+      { category: "🌍 Geografia", question: "Na jakim kontynencie znajduje się pustynia Sahara?", options: ["Azja", "Ameryka Południowa", "Australia", "Afryka"], correct: 3 },
+      { category: "⚔️ Historia", question: "W którym roku miała miejsce słynna bitwa pod Grunwaldem?", options: ["1385 r.", "1410 r.", "1466 r.", "1525 r."], correct: 1 },
+      { category: "⚔️ Historia", question: "W którym roku odbył się chrzest Polski?", options: ["966 r.", "1000 r.", "1025 r.", "1138 r."], correct: 0 },
+      { category: "⚔️ Historia", question: "Kto był pierwszym koronowanym królem Polski?", options: ["Mieszko I", "Bolesław Chrobry", "Kazimierz Wielki", "Władysław Łokietek"], correct: 1 },
+      { category: "🧬 Biologia", question: "Który organ w ciele człowieka odpowiada za produkcję insuliny?", options: ["Wątroba", "Trzustka", "Żołądek", "Nerki"], correct: 1 },
+      { category: "🧬 Biologia", question: "Jak nazywa się podstawowa jednostka strukturalna organizmów żywych?", options: ["Tkanka", "Komórka", "Narząd", "Białko"], correct: 1 },
+      { category: "🧬 Biologia", question: "Który barwnik w roślinach odpowiada za fotosyntezę?", options: ["Melanina", "Karoten", "Chlorofil", "Hemoglobina"], correct: 2 },
+      { category: "⚗️ Chemia", question: "Jaki jest symbol chemiczny złota w układzie okresowym pierwiastków?", options: ["Ag", "Fe", "Au", "Pt"], correct: 2 },
+      { category: "⚗️ Chemia", question: "Jaki odczyn ma roztwór o pH równym dokładnie 7?", options: ["Kwasowy", "Zasadowy", "Obojętny", "Żrący"], correct: 2 },
+      { category: "⚗️ Chemia", question: "Jaki jest wzór chemiczny wody?", options: ["CO2", "H2O", "NaCl", "O2"], correct: 1 },
+      { category: "📐 Matematyka", question: "Ile wynosi wynik działania: 2 + 2 × 2?", options: ["6", "8", "4", "10"], correct: 0 },
+      { category: "📐 Matematyka", question: "Ile wynosi suma kątów w dowolnym trójkącie?", options: ["90°", "180°", "270°", "360°"], correct: 1 },
+      { category: "📐 Matematyka", question: "Ile wynosi pierwiastek kwadratowy z liczby 144?", options: ["11", "12", "13", "14"], correct: 1 },
+      { category: "⚡ Fizyka", question: "W jakiej jednostce w układzie SI mierzymy siłę?", options: ["Dżul (J)", "Wat (W)", "Niuton (N)", "Paskal (Pa)"], correct: 2 },
+      { category: "💻 Informatyka", question: "Ile bitów mieści się w jednym bajcie (1 B)?", options: ["4 bity", "8 bitów", "16 bitów", "32 bity"], correct: 1 },
+      { category: "📚 Język Polski", question: "Kto napisał epopeję narodową „Pan Tadeusz”?", options: ["Juliusz Słowacki", "Henryk Sienkiewicz", "Adam Mickiewicz", "Bolesław Prus"], correct: 2 }
+    ];
+
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let selectedOption = -1;
+    const userAnswers = [];
+
+    function pickRandomQuestions() {
+      const copy = [...QUESTION_POOL];
+      currentQuestions = [];
+      const count = Math.min(5, copy.length);
+      for (let i = 0; i < count; i++) {
+        const rIdx = Math.floor(Math.random() * copy.length);
+        currentQuestions.push(copy.splice(rIdx, 1)[0]);
+      }
+    }
+
+    function loadQuestion() {
+      selectedOption = -1;
+      document.getElementById('error-msg').style.display = 'none';
+
+      const q = currentQuestions[currentIndex];
+      const total = currentQuestions.length;
+
+      document.getElementById('counter-txt').textContent = `Pytanie ${currentIndex + 1} z ${total}`;
+      document.getElementById('progress-bar').style.width = `${((currentIndex + 1) / total) * 100}%`;
+      document.getElementById('category-badge').textContent = q.category;
+      document.getElementById('question-text').textContent = q.question;
+
+      const letters = ['A', 'B', 'C', 'D'];
+      const optionsContainer = document.getElementById('options-list');
+      optionsContainer.innerHTML = '';
+
+      q.options.forEach((opt, idx) => {
+        const item = document.createElement('div');
+        item.className = 'option-item';
+        item.onclick = () => selectOption(idx, item);
+
+        item.innerHTML = `
+          <div class="letter-badge">${letters[idx]}</div>
+          <div class="option-text">${opt}</div>
+        `;
+        optionsContainer.appendChild(item);
+      });
+
+      document.getElementById('next-btn').textContent = 
+        currentIndex < total - 1 ? 'Następne pytanie ➔' : 'Zobacz wynik 🏁';
+    }
+
+    function selectOption(idx, elem) {
+      selectedOption = idx;
+      document.getElementById('error-msg').style.display = 'none';
+
+      document.querySelectorAll('.option-item').forEach(el => el.classList.remove('selected'));
+      elem.classList.add('selected');
+    }
+
+    function submitAnswer() {
+      if (selectedOption === -1) {
+        document.getElementById('error-msg').style.display = 'block';
+        return;
+      }
+
+      const q = currentQuestions[currentIndex];
+      userAnswers.push({
+        questionData: q,
+        chosen: selectedOption,
+        correct: q.correct,
+        isCorrect: selectedOption === q.correct
+      });
+
+      currentIndex++;
+      if (currentIndex < currentQuestions.length) {
+        loadQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      document.getElementById('question-screen').style.display = 'none';
+      document.getElementById('result-screen').style.display = 'block';
+
+      const correctCount = userAnswers.filter(a => a.isCorrect).length;
+      const total = currentQuestions.length;
+      const pct = Math.round((correctCount / total) * 100);
+
+      const scoreBig = document.getElementById('score-big');
+      scoreBig.textContent = `${correctCount} / ${total}`;
+
+      const pctLbl = document.getElementById('score-percentage');
+      pctLbl.textContent = `Poprawne odpowiedzi: ${pct}%`;
+
+      const tagLbl = document.getElementById('result-tag');
+      const feedLbl = document.getElementById('feedback-msg');
+
+      if (correctCount === 5) {
+        tagLbl.textContent = "🏆 PERFEKCYJNIE!";
+        tagLbl.style.color = "var(--success)";
+        feedLbl.textContent = "Gratulacje! Odpowiedziałeś poprawnie na wszystkie pytania!";
+      } else if (correctCount >= 4) {
+        tagLbl.textContent = "🌟 BARDZO DOBRZE!";
+        tagLbl.style.color = "#38bdf8";
+        feedLbl.textContent = "Świetna wiedza! Prawie idealny wynik!";
+      } else if (correctCount >= 3) {
+        tagLbl.textContent = "👍 DOBRY WYNIK!";
+        tagLbl.style.color = "#facc15";
+        feedLbl.textContent = "Większość odpowiedzi jest poprawna. Dobra robota!";
+      } else {
+        tagLbl.textContent = "📚 WARTO POWTÓRZYĆ!";
+        tagLbl.style.color = "var(--danger)";
+        feedLbl.textContent = "Nie przejmuj się! Powtórz materiał i spróbuj jeszcze raz.";
+      }
+
+      const breakdownList = document.getElementById('breakdown-list');
+      breakdownList.innerHTML = '';
+
+      userAnswers.forEach(ans => {
+        const q = ans.questionData;
+        const row = document.createElement('div');
+        row.className = 'breakdown-item';
+
+        const isOk = ans.isCorrect;
+        const icon = isOk ? '✓' : '✗';
+        const iconColor = isOk ? 'var(--success)' : 'var(--danger)';
+        const ansSummary = isOk 
+          ? `Twoja odpowiedź: <strong>${q.options[ans.chosen]}</strong>`
+          : `Twoja odpowiedź: <strong>${q.options[ans.chosen]}</strong> | Poprawna: <strong style="color:var(--success)">${q.options[ans.correct]}</strong>`;
+
+        row.innerHTML = `
+          <div class="breakdown-icon" style="color: ${iconColor}">${icon}</div>
+          <div class="breakdown-details">
+            <div class="breakdown-q">${q.category} - ${q.question}</div>
+            <div class="breakdown-a">${ansSummary}</div>
+          </div>
+        `;
+        breakdownList.appendChild(row);
+      });
+    }
+
+    function restartQuiz() {
+      currentIndex = 0;
+      userAnswers.length = 0;
+      selectedOption = -1;
+      pickRandomQuestions();
+      document.getElementById('result-screen').style.display = 'none';
+      document.getElementById('question-screen').style.display = 'block';
+      loadQuestion();
+    }
+
+    pickRandomQuestions();
+    loadQuestion();
+  </script>
+</body>
+</html>
